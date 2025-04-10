@@ -1,0 +1,26 @@
+body{
+    text-align: center;
+    color: wheat;
+    font-size: xx-large;
+}
+img{
+    margin: 100px 50px;
+    border-radius: 10px;
+    display: flexbox;
+    width: 200px;
+    text-align: center;
+    border-width: 5px;
+    border: 10px solid rgb(255, 61, 190);
+}
+#main{
+    width: 50%;
+    background-image: none;
+    background-color: rgb(188, 88, 255);
+    margin-top: 150px;
+    margin-left: auto;
+    margin-right: auto;
+    height: 150px;
+    justify-content: center;
+    align-items: center;
+    display: grid;
+}
