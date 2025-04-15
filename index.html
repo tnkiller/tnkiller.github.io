@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Music Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .music-container {
+            background-color: #181818;
+            border-radius: 15px;
+            box-shadow: 0 20px 20px rgba(0, 0, 0, 0.6);
+            padding: 20px 30px;
+            margin: 100px auto;
+            max-width: 450px;
+        }
+        
+        .img-container {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin: 0 auto;
+        }
+        
+        .img-container img {
+            border-radius: 50%;
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            animation: rotate 8s linear infinite;
+            animation-play-state: paused;
+        }
+        
+        .music-container.play .img-container img {
+            animation-play-state: running;
+        }
+        
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .navigation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            margin: 20px 0;
+        }
+        
+        .action-btn {
+            background: none;
+            border: 0;
+            color: #b3b3b3;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 10px;
+            margin: 0 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover, .action-btn.active {
+            color: #1DB954;
+        }
+        
+        .action-btn-big {
+            font-size: 30px;
+        }
+        
+        .music-info {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .music-info h4 {
+            font-size: 18px;
+            margin-bottom: 0;
+            color: #ffffff;
+        }
+        
+        .music-info p {
+            font-size: 14px;
+            color: #b3b3b3;
+            margin-top: 5px;
+        }
+        
+        .progress-container {
+            background: #4d4d4d;
+            border-radius: 5px;
+            cursor: pointer;
+            height: 4px;
+            width: 100%;
+        }
+        
+        .progress {
+            background-color: #1DB954;
+            border-radius: 5px;
+            height: 100%;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #b3b3b3;
+        }
+        
+        .playlist {
+            margin-top: 30px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .playlist-item {
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            transition: all 0.2s;
+        }
+        
+        .playlist-item:hover {
+            background-color: #282828;
+        }
+        
+        .playlist-item.active {
+            background-color: #333333;
+            color: #1DB954;
+        }
+        
+        .playlist-item img {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            margin-right: 15px;
+        }
+        
+        .playlist-item-info {
+            flex: 1;
+        }
+        
+        .playlist-item-title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .playlist-item-artist {
+            font-size: 12px;
+            color: #b3b3b3;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #181818;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #4d4d4d;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1DB954;
+        }
+        
+        /* Volume control */
+        .volume-container {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+        }
+        
+        .volume-icon {
+            color: #b3b3b3;
+            margin-right: 10px;
+        }
+        
+        .volume-slider {
+            flex: 1;
+            height: 4px;
+            background: #4d4d4d;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .volume-percentage {
+            background: #1DB954;
+            height: 100%;
+            width: 70%;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="music-container">
+            <div class="music-info">
+                <h4 id="title">Song Title</h4>
+                <p id="artist">Artist Name</p>
+            </div>
+            
+            <div class="img-container">
+                <img src="/api/placeholder/300/300" alt="music cover" id="cover">
+            </div>
+            
+            <div class="progress-container" id="progress-container">
+                <div class="progress" id="progress"></div>
+                <div class="time-info">
+                    <span id="current-time">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+            </div>
+            
+            <div class="navigation">
+                <button id="prev" class="action-btn">
+                    <i class="fas fa-backward"></i>
+                </button>
+                <button id="play" class="action-btn action-btn-big">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button id="next" class="action-btn">
+                    <i class="fas fa-forward"></i>
+                </button>
+            </div>
+            
+            <div class="volume-container">
+                <i class="fas fa-volume-up volume-icon"></i>
+                <div class="volume-slider" id="volume-slider">
+                    <div class="volume-percentage" id="volume-percentage"></div>
+                </div>
+            </div>
+            
+            <div class="playlist" id="playlist">
+                <!-- Playlist items will be added here via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Music player functionality
+        const musicContainer = document.querySelector('.music-container');
+        const playBtn = document.querySelector('#play');
+        const prevBtn = document.querySelector('#prev');
+        const nextBtn = document.querySelector('#next');
+        const audio = document.createElement('audio');
+        const progress = document.querySelector('#progress');
+        const progressContainer = document.querySelector('#progress-container');
+        const title = document.querySelector('#title');
+        const artist = document.querySelector('#artist');
+        const cover = document.querySelector('#cover');
+        const currentTimeEl = document.querySelector('#current-time');
+        const durationEl = document.querySelector('#duration');
+        const playlist = document.querySelector('#playlist');
+        const volumeSlider = document.querySelector('#volume-slider');
+        const volumePercentage = document.querySelector('#volume-percentage');
+        
+        // Song details
+        const songs = [
+            {
+                title: 'Summer Breeze',
+                artist: 'Groove Collective',
+                coverPath: '/api/placeholder/400/400',
+                audioPath: '#' // In a real app, this would be the path to your audio file
+            },
+            {
+                title: 'Midnight Dreams',
+                artist: 'Luna Echo',
+                coverPath: '/api/placeholder/400/400',
+                audioPath: '#'
+            },
+            {
+                title: 'Ocean Waves',
+                artist: 'The Soundscapes',
+                coverPath: '/api/placeholder/400/400',
+                audioPath: '#'
+            },
+            {
+                title: 'Urban Motion',
+                artist: 'City Lights',
+                coverPath: '/api/placeholder/400/400',
+                audioPath: '#'
+            },
+            {
+                title: 'Forest Whispers',
+                artist: 'Nature Beats',
+                coverPath: '/api/placeholder/400/400',
+                audioPath: '#'
+            }
+        ];
+        
+        // Keep track of song
+        let songIndex = 0;
+        
+        // Initially load song details into DOM
+        loadSong(songs[songIndex]);
+        populatePlaylist();
+        
+        // Update playlist UI
+        function populatePlaylist() {
+            playlist.innerHTML = '';
+            songs.forEach((song, index) => {
+                const playlistItem = document.createElement('div');
+                playlistItem.classList.add('playlist-item');
+                if (index === songIndex) {
+                    playlistItem.classList.add('active');
+                }
+                
+                playlistItem.innerHTML = `
+                    <img src="${song.coverPath}" alt="${song.title}">
+                    <div class="playlist-item-info">
+                        <div class="playlist-item-title">${song.title}</div>
+                        <div class="playlist-item-artist">${song.artist}</div>
+                    </div>
+                `;
+                
+                playlistItem.addEventListener('click', () => {
+                    songIndex = index;
+                    loadSong(songs[songIndex]);
+                    playSong();
+                    updatePlaylistActiveItem();
+                });
+                
+                playlist.appendChild(playlistItem);
+            });
+        }
+        
+        function updatePlaylistActiveItem() {
+            const playlistItems = document.querySelectorAll('.playlist-item');
+            playlistItems.forEach((item, index) => {
+                if (index === songIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+        
+        // Update song details
+        function loadSong(song) {
+            title.innerText = song.title;
+            artist.innerText = song.artist;
+            cover.src = song.coverPath;
+            audio.src = song.audioPath;
+            updatePlaylistActiveItem();
+        }
+        
+        // Play song
+        function playSong() {
+            musicContainer.classList.add('play');
+            playBtn.querySelector('i.fas').classList.remove('fa-play');
+            playBtn.querySelector('i.fas').classList.add('fa-pause');
+            
+            // In a real app, we would actually play the audio:
+            // audio.play();
+            
+            // For demonstration purposes, we'll simulate playback:
+            if (!window.fakeInterval) {
+                window.currentTime = 0;
+                window.totalDuration = 180; // 3 minutes in seconds
+                
+                updateTimeDisplay();
+                
+                window.fakeInterval = setInterval(() => {
+                    window.currentTime++;
+                    const progressPercent = (window.currentTime / window.totalDuration) * 100;
+                    progress.style.width = `${progressPercent}%`;
+                    updateTimeDisplay();
+                    
+                    if (window.currentTime >= window.totalDuration) {
+                        nextSong();
+                    }
+                }, 1000);
+            }
+        }
+        
+        // Pause song
+        function pauseSong() {
+            musicContainer.classList.remove('play');
+            playBtn.querySelector('i.fas').classList.add('fa-play');
+            playBtn.querySelector('i.fas').classList.remove('fa-pause');
+            
+            // In a real app:
+            // audio.pause();
+            
+            // For demonstration:
+            clearInterval(window.fakeInterval);
+            window.fakeInterval = null;
+        }
+        
+        // Previous song
+        function prevSong() {
+            songIndex--;
+            
+            if (songIndex < 0) {
+                songIndex = songs.length - 1;
+            }
+            
+            loadSong(songs[songIndex]);
+            playSong();
+        }
+        
+        // Next song
+        function nextSong() {
+            songIndex++;
+            
+            if (songIndex > songs.length - 1) {
+                songIndex = 0;
+            }
+            
+            loadSong(songs[songIndex]);
+            playSong();
+        }
+        
+        // Update progress bar
+        function updateProgress(e) {
+            const { duration, currentTime } = e.srcElement;
+            const progressPercent = (currentTime / duration) * 100;
+            progress.style.width = `${progressPercent}%`;
+        }
+        
+        // Set progress bar
+        function setProgress(e) {
+            const width = this.clientWidth;
+            const clickX = e.offsetX;
+            const duration = window.totalDuration;
+            
+            window.currentTime = (clickX / width) * duration;
+            updateTimeDisplay();
+            progress.style.width = `${(clickX / width) * 100}%`;
+            
+            // In a real app:
+            // audio.currentTime = (clickX / width) * audio.duration;
+        }
+        
+        // Format time in minutes and seconds
+        function formatTime(seconds) {
+            const min = Math.floor(seconds / 60);
+            const sec = Math.floor(seconds % 60);
+            return `${min}:${sec < 10 ? '0' + sec : sec}`;
+        }
+        
+        // Update time display
+        function updateTimeDisplay() {
+            currentTimeEl.textContent = formatTime(window.currentTime);
+            durationEl.textContent = formatTime(window.totalDuration);
+        }
+        
+        // Set volume
+        function setVolume(e) {
+            const width = this.clientWidth;
+            const clickX = e.offsetX;
+            const volumeLevel = clickX / width;
+            
+            volumePercentage.style.width = `${(volumeLevel * 100)}%`;
+            
+            // In a real app:
+            // audio.volume = volumeLevel;
+        }
+        
+        // Event listeners
+        playBtn.addEventListener('click', () => {
+            const isPlaying = musicContainer.classList.contains('play');
+            
+            if (isPlaying) {
+                pauseSong();
+            } else {
+                playSong();
+            }
+        });
+        
+        // Change song
+        prevBtn.addEventListener('click', prevSong);
+        nextBtn.addEventListener('click', nextSong);
+        
+        // Time/song update
+        audio.addEventListener('timeupdate', updateProgress);
+        
+        // Click on progress bar
+        progressContainer.addEventListener('click', setProgress);
+        
+        // Song ends
+        audio.addEventListener('ended', nextSong);
+        
+        // Volume control
+        volumeSlider.addEventListener('click', setVolume);
+    </script>
+</body>
+</html>
